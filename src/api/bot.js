@@ -40,7 +40,7 @@ export default class TradingBot {
       const { balance, loginid, email } = account
 
       console.log(
-        `====================\nYou current balance is: ${balance.currency} ${balance.display}\nDeriv Account: ${loginid}\nYour email is: ${email}\n====================`
+        `====================\nTu cuenta: ${loginid}\n Tienes un total de: ${balance.currency} ${balance.display} \nTu email: ${email}\n====================`
       )
     } catch (error) {
       console.error(error)
@@ -87,26 +87,26 @@ export default class TradingBot {
       ) {
         const candles = response._data.list
 
-        const firstCandle = candles[0].raw.close
-        const lastCandle = candles[candles.length - 1].raw.close
+        const firstCandlePrice = candles[0].raw.close
+        const lastCandlePrice = candles[candles.length - 1].raw.close
 
         // console.log(candles.length)
-        // console.log(firstCandle)
-        // console.log(lastCandle, firstCandle)
+        // console.log(firstCandlePrice)
+        // console.log(lastCandlePrice, firstCandlePrice)
 
         console.log(`Temporalidad de: ${selectedGranularity}`)
 
-        if (firstCandle > lastCandle) {
+        if (firstCandlePrice > lastCandlePrice) {
           console.log(
-            `first_close=${firstCandle}, last_close=${lastCandle}: La tendencia es bajista.\n=======================`
+            `first_close=${firstCandlePrice}, last_close=${lastCandlePrice}: La tendencia es bajista.\n=======================`
           )
-        } else if (firstCandle < lastCandle) {
+        } else if (firstCandlePrice < lastCandlePrice) {
           console.log(
-            `first_close=${firstCandle}, last_close=${lastCandle}: La tendencia es alcista.\n=======================`
+            `first_close=${firstCandlePrice}, last_close=${lastCandlePrice}: La tendencia es alcista.\n=======================`
           )
         } else {
           console.log(
-            `first_close=${firstCandle}, last_close=${lastCandle}: La tendencia es neutra.\n=======================`
+            `first_close=${firstCandlePrice}, last_close=${lastCandlePrice}: La tendencia es neutra.\n=======================`
           )
         }
       }

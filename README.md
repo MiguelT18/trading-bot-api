@@ -3,6 +3,9 @@
 # TODO:
 ## CARACTERÍSTICAS:
 
+### Módelo IA
+- Crear un modelo que se encargue de leer los precios y calcular las tendencias para estimar una zona de retesteo 
+
 ### Principales
 - Iniciar
 - Parar
