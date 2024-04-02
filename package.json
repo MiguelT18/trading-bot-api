@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@deriv/deriv-api": "^1.0.15",
+    "@tensorflow/tfjs": "^4.17.0",
     "ws": "^8.16.0"
   }
 }

@@ -1,8 +1,12 @@
 import WebSocket from "ws"
 import DerivApi from "@deriv/deriv-api/dist/DerivAPI"
+import PricePredictionModel from "./model"
 
-export default class TradingBot {
+export default class TradingBot extends PricePredictionModel {
   constructor(app_id, token, currency) {
+    super()
+    this.predictionModel = new PricePredictionModel()
+
     this.app_id = app_id
     this.token = token
     this.currency = currency
@@ -12,12 +16,19 @@ export default class TradingBot {
     )
     this.api = new DerivApi({ connection: this.ws })
 
+    // Initialize features and labels arrays
+    this.features = []
+    this.labels = []
+
     // When connection is established
     this.ws.on("open", async () => {
       // ? Call
       await this.showAccountDetails()
       console.log(`*** ANALIZANDO ${this.currency} ***\n`)
       await this.calculateTrend(this.currency)
+
+      await this.predictionModel.train(this.features, this.labels)
+
       await this.getPrice(this.currency)
 
       this.keepAlive()
@@ -50,10 +61,39 @@ export default class TradingBot {
   // Get the price of a symbol
   async getPrice(symbol) {
     try {
-      const ticks = await this.api.ticks(symbol)
-      ticks.onUpdate().subscribe((tick) => {
-        console.log(`El precio actual es: ${tick.raw.quote}`)
+      const response = await this.api.candles({
+        symbol: symbol,
+        granularity: 600,
+        range: { count: 1 },
       })
+
+      if (
+        response &&
+        response._data &&
+        response._data.list &&
+        response._data.list.length >= 1
+      ) {
+        const lastCandlePrice = response._data.list[0].raw.close
+
+        const ticks = await this.api.ticks(symbol)
+        ticks.onUpdate().subscribe((tick) => {
+          console.log(`El precio actual es: ${tick.raw.quote}`)
+
+          if (
+            typeof tick.raw.quote === "number" &&
+            typeof lastCandlePrice === "number"
+          ) {
+            const featuresForPrediction = [tick.raw.quote, lastCandlePrice]
+
+            const prediction = this.predictionModel.predict(
+              featuresForPrediction
+            )
+            console.log("Predicción del modelo:", prediction)
+          } else {
+            console.error("Los datos no son números, no se pueden predecir")
+          }
+        })
+      }
     } catch (error) {
       console.error(error)
     }
