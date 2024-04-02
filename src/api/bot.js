@@ -14,8 +14,12 @@ export default class TradingBot {
 
     // When connection is established
     this.ws.on("open", async () => {
-      // ? Call methods
-      this.showAccountDetails()
+      // ? Call
+      await this.showAccountDetails()
+      console.log(`*** ANALIZANDO ${this.currency} ***\n`)
+      await this.calculateTrend(this.currency)
+      await this.getPrice(this.currency)
+
       this.keepAlive()
     })
   }
@@ -38,8 +42,6 @@ export default class TradingBot {
       console.log(
         `====================\nYou current balance is: ${balance.currency} ${balance.display}\nDeriv Account: ${loginid}\nYour email is: ${email}\n====================`
       )
-
-      await this.getPrice(this.currency)
     } catch (error) {
       console.error(error)
     }
@@ -50,8 +52,64 @@ export default class TradingBot {
     try {
       const ticks = await this.api.ticks(symbol)
       ticks.onUpdate().subscribe((tick) => {
-        console.log(`El precio actual de ${symbol} es: ${tick.raw.quote}`)
+        console.log(`El precio actual es: ${tick.raw.quote}`)
       })
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  // Calculate Trend
+  async calculateTrend(symbol) {
+    const granularityOptions = {
+      "1min": 60,
+      "5min": 600,
+      "15min": 1800,
+      "30min": 3600,
+      "1hr": 7200,
+    }
+
+    // ? Select temporality
+    const selectedGranularity = "1hr"
+
+    try {
+      const response = await this.api.candles({
+        symbol: symbol,
+        granularity: granularityOptions[selectedGranularity],
+        range: { count: 70 },
+      })
+
+      if (
+        response &&
+        response._data &&
+        response._data.list &&
+        response._data.list.length >= 2
+      ) {
+        const candles = response._data.list
+
+        const firstCandle = candles[0].raw.close
+        const lastCandle = candles[candles.length - 1].raw.close
+
+        // console.log(candles.length)
+        // console.log(firstCandle)
+        // console.log(lastCandle, firstCandle)
+
+        console.log(`Temporalidad de: ${selectedGranularity}`)
+
+        if (firstCandle > lastCandle) {
+          console.log(
+            `first_close=${firstCandle}, last_close=${lastCandle}: La tendencia es bajista.\n=======================`
+          )
+        } else if (firstCandle < lastCandle) {
+          console.log(
+            `first_close=${firstCandle}, last_close=${lastCandle}: La tendencia es alcista.\n=======================`
+          )
+        } else {
+          console.log(
+            `first_close=${firstCandle}, last_close=${lastCandle}: La tendencia es neutra.\n=======================`
+          )
+        }
+      }
     } catch (error) {
       console.error(error)
     }
